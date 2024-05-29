@@ -1,0 +1,64 @@
+document.addEventListener("DOMContentLoaded", () => {
+    const searchForm = document.getElementById("search-form");
+    const specialtyInput = document.getElementById("specialty");
+    const specialtyList = document.getElementById("specialty-list");
+
+    specialtyInput.addEventListener("input", async () => {
+        const query = specialtyInput.value;
+        if (query.length >= 2) {
+            const response = await fetch(`autocomplete.php?query=${encodeURIComponent(query)}`);
+            if (response.ok) {
+                const specialties = await response.json();
+                showSpecialtyList(specialties);
+            }
+        } else {
+            specialtyList.innerHTML = "";
+        }
+    });
+
+    specialtyList.addEventListener("click", (event) => {
+        if (event.target.tagName === "LI") {
+            specialtyInput.value = event.target.textContent;
+            specialtyList.innerHTML = "";
+        }
+    });
+
+    searchForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        
+        const formData = new FormData(searchForm);
+        const searchParams = new URLSearchParams();
+
+        formData.forEach((value, key) => {
+            if (value) searchParams.append(key, value);
+        });
+
+        try {
+            const response = await fetch(`search.php?${searchParams.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const results = await response.json();
+                displayResults(results);
+            } else {
+                console.error("Search request failed.");
+            }
+        } catch (error) {
+            console.error("Error occurred during search:", error);
+        }
+    });
+
+    function showSpecialtyList(specialties) {
+        specialtyList.innerHTML = specialties.map(specialty => `<li>${specialty}</li>`).join("");
+    }
+
+    function displayResults(results) {
+        // Logic to display search results on the page
+        console.log(results);
+        // You can implement further logic to show the results in a user-friendly manner
+    }
+});
